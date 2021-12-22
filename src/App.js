@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 import "./components/style.css";
 import "./components/bootstrap.css";
 import TaskInputForm from "./components/TaskInputForm/TaskInputForm";
 import Tasks from "./components/Tasks/Tasks";
 import { About } from "./components/About/About";
+import Login from "./components/Login/Login";
+import AuthContext from "./components/storage/auth-context";
 function App() {
   // Useful Variables!!
 
+  const ctx = useContext(AuthContext);
   const [showForm, setshowForm] = useState(false);
   const [tasks, settasks] = useState([]);
   const [location, setlocation] = useState("/");
@@ -28,7 +31,7 @@ function App() {
     setshowForm(false);
   };
 
-  //Fetch Tasks from dummy database
+  //j Tasks from dummy database
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -93,23 +96,39 @@ function App() {
                 <h1 className="title">Task Tracker</h1>
               </div>
               <div className="col-6 text-right">
-                {location === "/" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setshowForm(true);
-                    }}
-                    className="btn btn-dark btn_big"
-                  >
-                    Add
-                  </button>
+                {location === "/" && ctx.isLoggedIn && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        ctx.onLogout()
+                      }}
+                      className="btn btn-dark btn_big"
+                    >
+                      Logout
+                    </button>&nbsp;&nbsp;
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setshowForm(true);
+                      }}
+                      className="btn btn-dark btn_big"
+                    >
+                      Add
+                    </button>
+                  </>
                 )}
               </div>
             </div>
           </div>
           <div className="card-body p-5 bg-dark text-white">
             <Routes>
-              <Route path="/" exact element={<Home></Home>}></Route>
+              {!ctx.isLoggedIn && (
+                <Route path="/" element={<Login></Login>}></Route>
+              )}
+              {ctx.isLoggedIn && (
+                <Route path="/" exact element={<Home></Home>}></Route>
+              )}
               <Route path="/about" element={<About></About>} />
             </Routes>
           </div>
