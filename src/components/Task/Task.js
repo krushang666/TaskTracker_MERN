@@ -6,6 +6,9 @@ const Task = (props) => {
   const DeleteTaskHandler = () => {
     props.DeleteTask(props.id);
   };
+  const UpdateTaskHandler = () =>{
+    props.UpdateTask(props.id);
+  }
   const newDate = new Date(props.date);
   const date =
     newDate.toLocaleString("en-US", { day: "2-digit" }) +
@@ -25,6 +28,13 @@ const Task = (props) => {
             <label>{props.time}</label>
           </div>
           <div className="col-6 text-right">
+          <button
+              className="btn btn-success"
+              onClick={UpdateTaskHandler}
+              type="button"
+            >
+              Update
+            </button>&nbsp;&nbsp;
             <button
               className="btn btn-danger"
               onClick={DeleteTaskHandler}

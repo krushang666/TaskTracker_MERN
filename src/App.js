@@ -7,42 +7,77 @@ import Tasks from "./components/Tasks/Tasks";
 import { About } from "./components/About/About";
 import Login from "./components/Login/Login";
 import AuthContext from "./components/storage/auth-context";
+import axios from "axios";
+import UpdateForm from "./components/UpdateForm/UpdateForm";
 function App() {
   // Useful Variables!!
 
+  const baseUrl = "http://localhost:3300/Task/";
   const ctx = useContext(AuthContext);
   const [showForm, setshowForm] = useState(false);
+  const [showUpdateForm, setUpdateForm] = useState(false);
   const [tasks, settasks] = useState([]);
   const [location, setlocation] = useState("/");
+  const [fetchedData, setfetchedData] = useState({});
   let displayForm;
+  let updateForm;
+
   // Adds New Task
+
   const onNewTaskHandler = async (data) => {
-    const res = await fetch(`http://localhost:3301/tasks`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    const receivedData = await res.json();
+    axios
+      .post(`${baseUrl}addTask`, {
+        Task: data,
+      })
+      .then((success) => {
+        alert(success.data);
+      });
     settasks((prevState) => {
-      return [...prevState, receivedData];
+      return [...prevState, data];
     });
     setshowForm(false);
   };
 
-  //j Tasks from dummy database
+  // fetchDataFromId
+
+  const fetchDataFromId = async (id) => {
+    const res = await axios.get(`${baseUrl}fetchFromId/${id}`);
+    setUpdateForm(true);
+    setfetchedData(res.data);
+    console.log(res.data);
+  };
+
+  //Update Task
+
+  const onUpdateTaskHandler = async (data) => {
+    console.log(data);
+    axios
+      .post(`${baseUrl}updateTask`, {
+        id: data.id,
+        Task: data.data,
+      })
+      .then(async (success) => {
+        alert(success.data);
+        setUpdateForm(false);
+        await fetchTasks();
+      });
+  };
+
+  //Fetch Tasks From Database
+
+  const fetchTasks = async () => {
+    const res = await axios.get(baseUrl);
+    const data = res.data;
+    console.log(data);
+    settasks(data);
+  };
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      const res = await fetch("http://localhost:3301/tasks");
-      const data = await res.json();
-      settasks(data);
-    };
     fetchTasks();
   }, []);
 
   // Confirms From showing
+
   if (showForm) {
     displayForm = (
       <TaskInputForm
@@ -56,13 +91,29 @@ function App() {
     displayForm = "";
   }
 
+  // Confirms Update Form showing
+
+  if (showUpdateForm) {
+    updateForm = (
+      <UpdateForm
+        data={fetchedData}
+        onCancel={() => {
+          setUpdateForm(false);
+        }}
+        onUpdateTask={onUpdateTaskHandler}
+      ></UpdateForm>
+    );
+  } else {
+    updateForm = "";
+  }
+
   // Delete Tasks
 
   const onDeleteTaskHandler = async (id) => {
-    await fetch(`http://localhost:3301/tasks/${id}`, {
-      method: "DELETE",
+    await axios.get(`${baseUrl}deleteTask/${id}`).then((data) => {
+      alert(data["data"]);
     });
-    settasks(tasks.filter((task) => task.id !== id));
+    settasks(tasks.filter((task) => task._id !== id));
   };
 
   // Hides Add Button
@@ -77,15 +128,21 @@ function App() {
     setlocation("/");
     return (
       <>
+        {updateForm}
         {displayForm}
         {tasks.length !== 0 ? (
-          <Tasks tasks={tasks} onDeleteTask={onDeleteTaskHandler}></Tasks>
+          <Tasks
+            tasks={tasks}
+            onUpdateTask={fetchDataFromId}
+            onDeleteTask={onDeleteTaskHandler}
+          ></Tasks>
         ) : (
           <h1>No Data To Show!!</h1>
         )}
       </>
     );
   };
+
   return (
     <Router>
       <div className="container">
@@ -96,17 +153,18 @@ function App() {
                 <h1 className="title">Task Tracker</h1>
               </div>
               <div className="col-6 text-right">
-                {location === "/" && ctx.isLoggedIn && (
+                {location === "/" && ctx.isLoggedIn && !showUpdateForm && (
                   <>
                     <button
                       type="button"
                       onClick={() => {
-                        ctx.onLogout()
+                        ctx.onLogout();
                       }}
                       className="btn btn-dark btn_big"
                     >
                       Logout
-                    </button>&nbsp;&nbsp;
+                    </button>
+                    &nbsp;&nbsp;
                     <button
                       type="button"
                       onClick={() => {

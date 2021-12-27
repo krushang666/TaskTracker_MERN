@@ -1,11 +1,18 @@
-import React,{useState} from "react";
+import React, { useState } from "react";
 import "../bootstrap.css";
 import "../style.css";
-const TaskInputForm = (props) => {
+const UpdateForm = (props) => {
+  const newDate = new Date(props.data.date);
+  const date =
+    newDate.getFullYear() +
+    "-" +
+    newDate.toLocaleString("en-US", { month: "2-digit" }) +
+    "-" +
+    newDate.toLocaleString("en-US", { day: "2-digit" });
   const [userInput, setuserInput] = useState({
-    title: '',
-    date: '',
-    time: '',
+    title: props.data.title,
+    date: date,
+    time: props.data.time,
   });
   const taskTitleHandler = (e) => {
     setuserInput((prevState) => {
@@ -20,9 +27,10 @@ const TaskInputForm = (props) => {
     setuserInput((prevState) => {
       return {
         ...prevState,
-        date: new Date(e.target.value),
+        date: e.target.value,
       };
     });
+    console.log(userInput.date);
   };
   const taskTimeHandler = (e) => {
     setuserInput((prevState) => {
@@ -34,7 +42,12 @@ const TaskInputForm = (props) => {
   };
   const onSubmitHandler = (e) => {
     e.preventDefault();
-    props.onNewTask(userInput);
+    const newData={
+        title:userInput.title,
+        date:new Date(userInput.date),
+        time:userInput.time
+    };
+    props.onUpdateTask({id:props.data._id,data:newData});
     setuserInput({
       title: "",
       date: "",
@@ -50,9 +63,9 @@ const TaskInputForm = (props) => {
               <label>Task Name</label>
               <input
                 type="text"
-                value={userInput.title}
                 placeholder="Enter Task Name"
                 onChange={taskTitleHandler}
+                value={userInput.title}
                 className="form-control"
               />
             </div>
@@ -63,8 +76,8 @@ const TaskInputForm = (props) => {
               <label>Date</label>
               <input
                 type="date"
-                value={userInput.date}
                 className="form-control"
+                value={userInput.date}
                 onChange={taskDateHandler}
               />
             </div>
@@ -102,4 +115,4 @@ const TaskInputForm = (props) => {
     </form>
   );
 };
-export default TaskInputForm;
+export default UpdateForm;
